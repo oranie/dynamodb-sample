@@ -10,8 +10,16 @@ import (
 
 func main() {
 	t := time.Now()
+	testTableCreate()
 
 	svc := dynamodb.New(&aws.Config{Region: aws.String("ap-northeast-1")})
+
+	createResp,createErr := testTableCreate()
+	if createErr != nil {
+		fmt.Println(createErr.Error())
+		return
+	}
+	log.Println("create table",createResp)
 
 	scanParams := &dynamodb.ScanInput{
 		TableName:aws.String("access_log_range"),
@@ -48,7 +56,7 @@ func main() {
 		pageNum++
 		items := page.Items
 		for i := 0; i < len(items); i++   {
-			fmt.Println("count :",itemCount," item : ",*items[i]["time"].S)
+			//fmt.Println("count :",itemCount," item : ",*items[i]["time"].S)
 			itemCount++
 		}
 		fmt.Println("scan output:",*page.Count,)
@@ -64,4 +72,58 @@ func main() {
     log.Println("-------scan end--------")
 	log.Println("start time:",t)
 	log.Println("end time:",time.Now())
+}
+
+func testTableCreate() (*dynamodb.CreateTableOutput,error) {
+	svc := dynamodb.New(&aws.Config{Region: aws.String("ap-northeast-1")})
+
+	params := &dynamodb.CreateTableInput{
+		AttributeDefinitions: []*dynamodb.AttributeDefinition{ // Required
+			{ // Required
+				AttributeName: aws.String("key"), // Required
+				AttributeType: aws.String("S"),    // Required
+			},
+		},
+		KeySchema: []*dynamodb.KeySchemaElement{ // Required
+			{ // Required
+				AttributeName: aws.String("key"), // Required
+				KeyType:       aws.String("HASH"),                // Required
+			},
+		},
+		ProvisionedThroughput: &dynamodb.ProvisionedThroughput{ // Required
+			ReadCapacityUnits:  aws.Int64(100), // Required
+			WriteCapacityUnits: aws.Int64(100), // Required
+		},
+		TableName: aws.String("result"), // Required
+		StreamSpecification: &dynamodb.StreamSpecification{
+			StreamEnabled:  aws.Bool(true),
+			StreamViewType: aws.String("NEW_AND_OLD_IMAGES"),
+		},
+	}
+	testTableDelete()
+
+	resp, err := svc.CreateTable(params)
+
+	if err != nil {
+		panic(err.Error())
+	}
+
+	fmt.Println(resp)
+	return resp,err
+}
+
+func testTableDelete() (){
+	svc := dynamodb.New(&aws.Config{Region: aws.String("ap-northeast-1")})
+
+	params := &dynamodb.DeleteTableInput{
+		TableName: aws.String("result"), // Required
+	}
+	resp, err := svc.DeleteTable(params)
+
+	if err != nil {
+		panic(err.Error())
+		return
+	}
+
+	fmt.Println(resp)
 }
