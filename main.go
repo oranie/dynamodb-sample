@@ -10,6 +10,7 @@ import (
 
 func main() {
 	t := time.Now()
+	testTableDelete()
 	testTableCreate()
 
 	svc := dynamodb.New(&aws.Config{Region: aws.String("ap-northeast-1")})
@@ -100,7 +101,6 @@ func testTableCreate() (*dynamodb.CreateTableOutput,error) {
 			StreamViewType: aws.String("NEW_AND_OLD_IMAGES"),
 		},
 	}
-	testTableDelete()
 
 	resp, err := svc.CreateTable(params)
 
@@ -121,9 +121,9 @@ func testTableDelete() (){
 	resp, err := svc.DeleteTable(params)
 
 	if err != nil {
-		panic(err.Error())
+		log.Println(err.Error())
 		return
 	}
 
-	fmt.Println(resp)
+	fmt.Println(resp.TableDescription.TableStatus)
 }
