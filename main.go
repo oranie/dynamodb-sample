@@ -52,6 +52,7 @@ func main() {
 			itemCount++
 		}
 		fmt.Println("scan output:",*page.Count,)
+		fmt.Println(page.LastEvaluatedKey)
 		return page.LastEvaluatedKey != nil
 	})
 
